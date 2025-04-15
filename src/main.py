@@ -1,5 +1,5 @@
-from controllers.uploadController import UploadController
+from controllers.controller import VideoController
 
 if __name__ == "__main__":
-    app = UploadController()
+    app = VideoController()
     app.run()
