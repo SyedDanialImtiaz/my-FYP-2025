@@ -1,5 +1,6 @@
 import os
 import shutil
+import cv2
 
 class Upload:
     def __init__(self):
@@ -21,3 +22,28 @@ class Upload:
 
         shutil.copy(self.video_path, destination_path)
         return destination_path
+
+    def get_video_info(self):
+        cap = cv2.VideoCapture(self.video_path)
+
+        if not cap.isOpened():
+            raise ValueError("Cannot open video.")
+
+        file_name = os.path.basename(self.video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        duration = frame_count / fps if fps else 0
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        format_ext = os.path.splitext(self.video_path)[-1].replace('.', '')
+
+        cap.release()
+
+        return {
+            "File Name": file_name,
+            "Format": format_ext,
+            "Duration (s)": round(duration, 2),
+            "Resolution": f"{width}x{height}",
+            "FPS": fps,
+            "Frame Count": frame_count
+        }

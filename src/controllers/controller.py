@@ -13,21 +13,25 @@ class VideoController:
             filetypes=[("Video Files", "*.mp4 *.mkv")]
         )
         if path:
+            self.view.clear_log()  # ← clears log before writing new info
             self.model.set_video_path(path)
-            # self.view.update_label(f"Selected: {path}")
             self.view.log_message("[INFO]", f"Video selected: {path}")
+            
+            try:
+                info = self.model.get_video_info()
+                for key, value in info.items():
+                    self.view.log_message("[INFO]", f"{key}: {value}")
+            except Exception as e:
+                self.view.log_message("[ERROR_01]", str(e))
         else:
-            # self.view.update_label("No video selected")
-            self.view.log_message("[ERROR]", "No video selected")
+            self.view.log_message("[ERROR_02]", "No video file selected.")
 
     def upload_video(self):
         try:
             uploaded_path = self.model.upload_video()
-            # self.view.log_message(f"Video uploaded to: {uploaded_path}")
             self.view.log_message("[INFO]", f"Video uploaded to: {uploaded_path}")
         except Exception as e:
-            # self.view.log_message(f"Upload failed: {str(e)}")
-            self.view.log_message("[ERROR]", str(e))
+            self.view.log_message("[ERROR_03]", str(e))
 
     def run(self):
         self.view.mainloop()
