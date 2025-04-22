@@ -1,10 +1,10 @@
 from tkinter import filedialog
-from models.video_model import Upload
+from models.video_model import Video
 from views.view import VideoView
 
 class VideoController:
     def __init__(self):
-        self.model = Upload()
+        self.model = Video()
         self.view = VideoView(self)
 
     def browse_video(self):

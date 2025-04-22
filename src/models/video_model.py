@@ -2,7 +2,7 @@ import os
 import shutil
 import cv2
 
-class Upload:
+class Video:
     def __init__(self):
         self.video_path = None
 
@@ -42,8 +42,8 @@ class Upload:
         return {
             "File Name": file_name,
             "Format": format_ext,
-            "Duration (s)": round(duration, 2),
             "Resolution": f"{width}x{height}",
+            "Duration (s)": round(duration, 2),
             "FPS": fps,
             "Frame Count": frame_count
         }
