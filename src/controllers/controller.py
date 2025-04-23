@@ -26,12 +26,19 @@ class VideoController:
         else:
             self.view.log_message("[ERROR_02]", "No video file selected.")
 
-    def upload_video(self):
+    # def upload_video(self):
+    #     try:
+    #         uploaded_path = self.model.upload_video()
+    #         self.view.log_message("[INFO]", f"Video uploaded to: {uploaded_path}")
+    #     except Exception as e:
+    #         self.view.log_message("[ERROR_03]", str(e))
+    
+    def video_to_frames(self):
         try:
-            uploaded_path = self.model.upload_video()
-            self.view.log_message("[INFO]", f"Video uploaded to: {uploaded_path}")
+            frame_count = self.model.video_to_frames()
+            self.view.log_message("[INFO]", f"{frame_count} frames succesfully extracted from video!")
         except Exception as e:
-            self.view.log_message("[ERROR_03]", str(e))
+            self.view.log_message("[ERROR_04]", str(e))
 
     def run(self):
         self.view.mainloop()

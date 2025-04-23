@@ -12,16 +12,16 @@ class Video:
     def get_video_path(self):
         return self.video_path
 
-    def upload_video(self, destination_folder="uploaded_videos"):
-        if not self.video_path:
-            raise ValueError("No video file selected.")
+    # def upload_video(self, destination_folder="uploaded_videos"):
+    #     if not self.video_path:
+    #         raise ValueError("No video file selected.")
 
-        os.makedirs(destination_folder, exist_ok=True)
-        file_name = os.path.basename(self.video_path)
-        destination_path = os.path.join(destination_folder, file_name)
+    #     os.makedirs(destination_folder, exist_ok=True)
+    #     file_name = os.path.basename(self.video_path)
+    #     destination_path = os.path.join(destination_folder, file_name)
 
-        shutil.copy(self.video_path, destination_path)
-        return destination_path
+    #     shutil.copy(self.video_path, destination_path)
+    #     return destination_path
 
     def get_video_info(self):
         cap = cv2.VideoCapture(self.video_path)
@@ -47,3 +47,28 @@ class Video:
             "FPS": fps,
             "Frame Count": frame_count
         }
+        
+    def video_to_frames(self, output_folder="frames"):
+
+        if not self.video_path:
+            raise ValueError("No video file selected.")
+
+        os.makedirs(output_folder, exist_ok=True)
+        cap = cv2.VideoCapture(self.video_path)
+
+        if not cap.isOpened():
+            raise ValueError("Cannot open video.")
+
+        frame_count = 0
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            frame_file_name = os.path.join(output_folder, f"frame_{frame_count:04d}.jpg")
+            cv2.imwrite(frame_file_name, frame)
+            frame_count += 1
+
+        cap.release()
+        
+        return frame_count

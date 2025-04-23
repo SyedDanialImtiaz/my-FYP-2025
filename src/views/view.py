@@ -28,11 +28,11 @@ class VideoView:
         self.browse_button = tk.Button(left_frame, text="Browse", width=20, command=self.controller.browse_video)
         self.browse_button.pack(pady=5)
 
-        self.upload_button = tk.Button(left_frame, text="Upload", width=20, command=self.controller.upload_video)
-        self.upload_button.pack(pady=5)
+        # self.upload_button = tk.Button(left_frame, text="Upload", width=20, command=self.controller.upload_video)
+        # self.upload_button.pack(pady=5)
         
         # add some buttons to use for later
-        self.button1 = tk.Button(left_frame, text="Button 1", width=20, command=lambda: self.log_message("[INFO]", "Button 1 clicked"))
+        self.button1 = tk.Button(left_frame, text="Get Frames", width=20, command=self.controller.video_to_frames)
         self.button1.pack(pady=5)
         
         self.button2 = tk.Button(left_frame, text="Clear Log", width=20, command=lambda: self.clear_log())

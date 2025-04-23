@@ -176,3 +176,5 @@ cython_debug/
 # Video Files
 *.mp4
 *.mkv
+
+frames/
