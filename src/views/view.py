@@ -38,6 +38,9 @@ class VideoView:
         self.button2 = tk.Button(left_frame, text="Clear Log", width=20, command=lambda: self.clear_log())
         self.button2.pack(pady=5)
         
+        self.button3 = tk.Button(left_frame, text="Create Video", width=20, command=self.controller.frames_to_video)
+        self.button3.pack(pady=5)
+        
         self.log_area = scrolledtext.ScrolledText(right_frame, wrap="word", state="disabled")
         self.log_area.pack(fill="both", expand=True)
         

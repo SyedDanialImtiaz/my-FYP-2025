@@ -5,6 +5,12 @@ import cv2
 class Video:
     def __init__(self):
         self.video_path = None
+        self.file_name = None
+        self.fps = None
+        self.frame_count = None
+        self.duration = None
+        self.width = None
+        self.height = None
 
     def set_video_path(self, path):
         self.video_path = path
@@ -29,23 +35,23 @@ class Video:
         if not cap.isOpened():
             raise ValueError("Cannot open video.")
 
-        file_name = os.path.basename(self.video_path)
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        duration = frame_count / fps if fps else 0
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.file_name = os.path.basename(self.video_path)
+        self.fps = cap.get(cv2.CAP_PROP_FPS)
+        self.frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.duration = self.frame_count / self.fps if self.fps else 0
+        self.width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         format_ext = os.path.splitext(self.video_path)[-1].replace('.', '')
 
         cap.release()
 
         return {
-            "File Name": file_name,
+            "File Name": self.file_name,
             "Format": format_ext,
-            "Resolution": f"{width}x{height}",
-            "Duration (s)": round(duration, 2),
-            "FPS": fps,
-            "Frame Count": frame_count
+            "Resolution": f"{self.width}x{self.height}",
+            "Duration (s)": round(self.duration, 2),
+            "FPS": self.fps,
+            "Frame Count": self.frame_count
         }
         
     def video_to_frames(self, output_folder="frames"):
@@ -53,7 +59,11 @@ class Video:
         if not self.video_path:
             raise ValueError("No video file selected.")
 
+        # os.makedirs(output_folder, exist_ok=True)
+        if os.path.exists(output_folder):
+            shutil.rmtree(output_folder)      # delete folder + contents
         os.makedirs(output_folder, exist_ok=True)
+         
         cap = cv2.VideoCapture(self.video_path)
 
         if not cap.isOpened():
@@ -72,3 +82,50 @@ class Video:
         cap.release()
         
         return frame_count
+    
+    def frames_to_video(self, frames_folder="frames", output_path="output_video.mp4", codec="mp4v"):
+        """
+        Stitch frames from a folder back into a video file.
+
+        :param frames_folder: Directory containing image frames.
+        :param output_path: Path for saving the output video.
+        :param codec: FourCC codec (e.g., 'XVID' for .avi, 'mp4v' for .mp4).
+        :param fps: Frames per second. Defaults to original video's FPS if available.
+        :return: The output video path.
+        """
+        # Determine FPS
+        fps = self.fps
+
+        # Collect and sort frame files
+        frames = sorted([
+            f for f in os.listdir(frames_folder)
+            if f.lower().endswith(('.png', '.jpg', '.jpeg'))
+        ])
+        if not frames:
+            raise ValueError(f"No frames found in folder: {frames_folder}")
+
+        # Read first frame to get video dimensions
+        first_frame_path = os.path.join(frames_folder, frames[0])
+        frame = cv2.imread(first_frame_path)
+        if frame is None:
+            raise ValueError(f"Cannot read frame: {first_frame_path}")
+        height, width, layers = frame.shape
+        size = (width, height)
+
+        # Initialize VideoWriter
+        fourcc = cv2.VideoWriter_fourcc(*codec)
+        out = cv2.VideoWriter(output_path, fourcc, fps, size)
+        if not out.isOpened():
+            raise ValueError("Cannot create video writer. Check codec and output path.")
+
+        # Write frames to video
+        for fname in frames:
+            frame_path = os.path.join(frames_folder, fname)
+            img = cv2.imread(frame_path)
+            if img is None:
+                raise ValueError(f"Cannot read frame: {frame_path}")
+            out.write(img)
+
+        out.release()
+        return output_path
+    

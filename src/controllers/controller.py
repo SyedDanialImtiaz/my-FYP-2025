@@ -39,6 +39,13 @@ class VideoController:
             self.view.log_message("[INFO]", f"{frame_count} frames succesfully extracted from video!")
         except Exception as e:
             self.view.log_message("[ERROR_04]", str(e))
+            
+    def frames_to_video(self):
+        try:
+            video_path = self.model.frames_to_video()
+            self.view.log_message("[INFO]", f"Video created from frames: {video_path}")
+        except Exception as e:
+            self.view.log_message("[ERROR_05]", str(e))
 
     def run(self):
         self.view.mainloop()
