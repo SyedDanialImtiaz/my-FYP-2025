@@ -1,6 +1,6 @@
 from tkinter import filedialog
-from models.video_model import Video
-from views.view import VideoView
+from models import Video
+from views import VideoView
 
 class VideoController:
     def __init__(self):
@@ -8,6 +8,9 @@ class VideoController:
         self.view = VideoView(self)
 
     def browse_video(self):
+        if self.model.get_video_path() is not None:
+            self.model = Video()
+
         path = filedialog.askopenfilename(
             title="Select a Video File",
             filetypes=[("Video Files", "*.mp4 *.mkv")]

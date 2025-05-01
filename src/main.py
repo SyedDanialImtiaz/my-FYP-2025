@@ -1,4 +1,4 @@
-from controllers.controller import VideoController
+from controllers import VideoController
 
 if __name__ == "__main__":
     app = VideoController()

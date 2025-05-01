@@ -59,7 +59,6 @@ class Video:
         if not self.video_path:
             raise ValueError("No video file selected.")
 
-        # os.makedirs(output_folder, exist_ok=True)
         if os.path.exists(output_folder):
             shutil.rmtree(output_folder)      # delete folder + contents
         os.makedirs(output_folder, exist_ok=True)
@@ -83,7 +82,7 @@ class Video:
         
         return frame_count
     
-    def frames_to_video(self, frames_folder="frames", output_path="output_video.mp4", codec="mp4v"):
+    def frames_to_video(self, frames_folder="frames", output_path="video_output.mp4", codec="mp4v"):
         """
         Stitch frames from a folder back into a video file.
 
@@ -95,6 +94,8 @@ class Video:
         """
         # Determine FPS
         fps = self.fps
+        
+        # output_path = self.file_name.replace('.mp4', '_output.mp4')
 
         # Collect and sort frame files
         frames = sorted([
@@ -105,12 +106,12 @@ class Video:
             raise ValueError(f"No frames found in folder: {frames_folder}")
 
         # Read first frame to get video dimensions
-        first_frame_path = os.path.join(frames_folder, frames[0])
-        frame = cv2.imread(first_frame_path)
-        if frame is None:
-            raise ValueError(f"Cannot read frame: {first_frame_path}")
-        height, width, layers = frame.shape
-        size = (width, height)
+        # first_frame_path = os.path.join(frames_folder, frames[0])
+        # frame = cv2.imread(first_frame_path)
+        # if frame is None:
+        #     raise ValueError(f"Cannot read frame: {first_frame_path}")
+        # height, width, layers = frame.shape
+        size = (self.width, self.height)
 
         # Initialize VideoWriter
         fourcc = cv2.VideoWriter_fourcc(*codec)
