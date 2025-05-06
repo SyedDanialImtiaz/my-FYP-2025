@@ -11,4 +11,4 @@ My Final Year Project that is titled "Anti-Deepfake Watermarking for Video Authe
 - reattach the frames to get original video
 - find open source face recognition algorithm
 - research on watermarking algo
--
+- fix audio missing after stitching

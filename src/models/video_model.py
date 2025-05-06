@@ -18,17 +18,6 @@ class Video:
     def get_video_path(self):
         return self.video_path
 
-    # def upload_video(self, destination_folder="uploaded_videos"):
-    #     if not self.video_path:
-    #         raise ValueError("No video file selected.")
-
-    #     os.makedirs(destination_folder, exist_ok=True)
-    #     file_name = os.path.basename(self.video_path)
-    #     destination_path = os.path.join(destination_folder, file_name)
-
-    #     shutil.copy(self.video_path, destination_path)
-    #     return destination_path
-
     def get_video_info(self):
         cap = cv2.VideoCapture(self.video_path)
 
@@ -92,8 +81,8 @@ class Video:
         :param fps: Frames per second. Defaults to original video's FPS if available.
         :return: The output video path.
         """
-        # Determine FPS
         fps = self.fps
+        size = (self.width, self.height)
         
         # output_path = self.file_name.replace('.mp4', '_output.mp4')
 
@@ -104,14 +93,6 @@ class Video:
         ])
         if not frames:
             raise ValueError(f"No frames found in folder: {frames_folder}")
-
-        # Read first frame to get video dimensions
-        # first_frame_path = os.path.join(frames_folder, frames[0])
-        # frame = cv2.imread(first_frame_path)
-        # if frame is None:
-        #     raise ValueError(f"Cannot read frame: {first_frame_path}")
-        # height, width, layers = frame.shape
-        size = (self.width, self.height)
 
         # Initialize VideoWriter
         fourcc = cv2.VideoWriter_fourcc(*codec)
