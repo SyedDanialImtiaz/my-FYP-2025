@@ -1,5 +1,5 @@
 from .video_model import Video
-# from .face import Face
-# from .watermark_model import WatermarkModel
+from .face import Face
+from .face_detector import FaceDetector
 
-__all__ = ["Video", "Face", "WatermarkModel"]
+__all__ = ["Video", "Face", "FaceDetector"]
