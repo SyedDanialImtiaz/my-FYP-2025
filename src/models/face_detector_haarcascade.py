@@ -32,7 +32,10 @@ class FaceDetector:
     def detect_in_folder(self, folder: str = "frames") -> dict[str, list[Face]]:
         """Walks through all image files in `folder`, runs detect(), and returns a mapping: { filename: [Face, …], … }."""
         if not os.path.isdir(folder):
-            raise ValueError(f"Frames folder not found: {folder}")
+            raise ValueError(f"{folder} folder not found")
+
+        if not os.listdir(folder):
+            raise ValueError(f"{folder} folder is empty")
 
         results = {}
         for fname in sorted(os.listdir(folder)):
