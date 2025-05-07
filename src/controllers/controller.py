@@ -14,7 +14,6 @@ class VideoController:
         atexit.register(self._clear_frames_folder)        
         
     def _clear_frames_folder(self):
-        """Delete + recreate the frames folder so it's empty."""
         import os, shutil
         if os.path.isdir(self.FRAMES_DIR):
             shutil.rmtree(self.FRAMES_DIR)
@@ -47,25 +46,39 @@ class VideoController:
             frame_count = self.model.video_to_frames()
             self.view.log_message("[INFO]", f"{frame_count} frames succesfully extracted from video!")
         except Exception as e:
-            self.view.log_message("[ERROR_04]", str(e))
+            self.view.log_message("[ERROR_03]", str(e))
             
     def frames_to_video(self):
         try:
             video_path = self.model.frames_to_video()
             self.view.log_message("[INFO]", f"Video created from frames: {video_path}")
         except Exception as e:
-            self.view.log_message("[ERROR_05]", str(e))
+            self.view.log_message("[ERROR_04]", str(e))
             
     def detect_faces(self):
         try:
-            face_map = self.detector.detect_in_folder(self.FRAMES_DIR)  
+            face_map = self.detector.detect_in_folder(self.FRAMES_DIR)
+            # summary accumulator: face_index → total count
+            summary: dict[int, int] = {}
+            # log per-frame results
             for fname, faces in face_map.items():
                 self.view.log_message("[INFO]", f"{fname}: {len(faces)} face(s) detected")
                 for face in faces:
+                    idx = face.index
+                    summary[idx] = summary.get(idx, 0) + 1
                     x, y, w, h = face.bbox
-                    # self.view.log_message("[INFO]", f"  • Face {face.index}: x={x}, y={y}, w={w}, h={h}")
+                    self.view.log_message(
+                        "[INFO]",
+                        f"  • Face {idx}: x={x}, y={y}, w={w}, h={h}"
+                    )
+            # final summary
+            self.view.log_message("[INFO]", "Face detection summary:")
+            for idx in sorted(summary):
+                count = summary[idx]
+                self.view.log_message("[INFO]", f"Face {idx}: detected {count} time{'s' if count!=1 else ''}")
+
         except Exception as e:
-            self.view.log_message("[ERROR_06]", str(e))
+            self.view.log_message("[ERROR_05]", str(e))        
 
     def run(self):
         self.view.mainloop()
