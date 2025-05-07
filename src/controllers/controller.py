@@ -1,5 +1,5 @@
 from tkinter import filedialog
-from models import Video, FaceDetector
+from models import Video, FaceDetectorCascade, FaceDetectorDNN
 from views import VideoView
 import atexit
 
@@ -9,7 +9,8 @@ class VideoController:
     def __init__(self):
         self.model = Video()
         self.view = VideoView(self)
-        self.detector = FaceDetector()
+        self.detectorCascade = FaceDetectorCascade()
+        self.detectorDNN = FaceDetectorDNN()
         self._clear_frames_folder()
         atexit.register(self._clear_frames_folder)        
         
@@ -28,7 +29,7 @@ class VideoController:
             filetypes=[("Video Files", "*.mp4 *.mkv")]
         )
         if path:
-            self.view.clear_log()  # ← clears log before writing new info
+            self.view.clear_log()
             self.model.set_video_path(path)
             self.view.log_message("[INFO]", f"Video selected: {path}")
             
@@ -55,9 +56,9 @@ class VideoController:
         except Exception as e:
             self.view.log_message("[ERROR_04]", str(e))
             
-    def detect_faces(self):
+    def detect_faces_dnn(self):
         try:
-            face_map = self.detector.detect_in_folder(self.FRAMES_DIR)
+            face_map = self.detectorDNN.detect_in_folder(self.FRAMES_DIR)
             # summary accumulator: face_index → total count
             summary: dict[int, int] = {}
             # log per-frame results
@@ -67,10 +68,7 @@ class VideoController:
                     idx = face.index
                     summary[idx] = summary.get(idx, 0) + 1
                     x, y, w, h = face.bbox
-                    self.view.log_message(
-                        "[INFO]",
-                        f"  • Face {idx}: x={x}, y={y}, w={w}, h={h}"
-                    )
+                    self.view.log_message("[INFO]", f"  • Face {idx}: x={x}, y={y}, w={w}, h={h}")
             # final summary
             self.view.log_message("[INFO]", "Face detection summary:")
             for idx in sorted(summary):
@@ -78,7 +76,29 @@ class VideoController:
                 self.view.log_message("[INFO]", f"Face {idx}: detected {count} time{'s' if count!=1 else ''}")
 
         except Exception as e:
-            self.view.log_message("[ERROR_05]", str(e))        
+            self.view.log_message("[ERROR_05]", str(e)) 
+            
+    def detect_faces_cascade(self):
+        try:
+            face_map = self.detectorCascade.detect_in_folder(self.FRAMES_DIR)
+            # summary accumulator: face_index → total count
+            summary: dict[int, int] = {}
+            # log per-frame results
+            for fname, faces in face_map.items():
+                self.view.log_message("[INFO]", f"{fname}: {len(faces)} face(s) detected")
+                for face in faces:
+                    idx = face.index
+                    summary[idx] = summary.get(idx, 0) + 1
+                    x, y, w, h = face.bbox
+                    self.view.log_message("[INFO]", f"  • Face {idx}: x={x}, y={y}, w={w}, h={h}")
+            # final summary
+            self.view.log_message("[INFO]", "Face detection summary:")
+            for idx in sorted(summary):
+                count = summary[idx]
+                self.view.log_message("[INFO]", f"Face {idx}: detected {count} time{'s' if count!=1 else ''}")
+
+        except Exception as e:
+            self.view.log_message("[ERROR_05]", str(e))       
 
     def run(self):
         self.view.mainloop()

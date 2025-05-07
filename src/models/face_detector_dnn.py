@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from models import Face
 
-class FaceDetector:
+class FaceDetectorDNN:
     """
     A faster/more accurate face detector using OpenCV's DNN (ResNet SSD) model.
     """

@@ -3,7 +3,7 @@ import os
 import numpy as np
 from models import Face
 
-class FaceDetector:
+class FaceDetectorCascade:
     def __init__(self, cascade_path: str = None):
         # default to OpenCV’s bundled frontal-face Haar cascade
         cascade_path = cascade_path or (
