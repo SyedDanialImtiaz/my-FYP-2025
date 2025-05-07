@@ -7,7 +7,7 @@ class FaceDetectorDNN:
     """
     A faster/more accurate face detector using OpenCV's DNN (ResNet SSD) model.
     """
-    def __init__(self, proto_path: str = None, model_path: str = None, conf_threshold: float = 0.5):
+    def __init__(self, proto_path: str = None, model_path: str = None, conf_threshold: float = 0.6):
         # defaults assume you’ve placed both files alongside this script:
         base = os.path.dirname(__file__)
         self.proto_path = proto_path or os.path.join(base, "deploy.prototxt")
@@ -46,7 +46,7 @@ class FaceDetectorDNN:
             endX, endY     = min(w - 1, endX), min(h - 1, endY)
             bbox = (startX, startY, endX - startX, endY - startY)
 
-            faces.append(Face.from_bbox(i, frame, bbox))
+            faces.append(Face.from_bbox(i, frame, bbox, confidence))
 
         return faces
 

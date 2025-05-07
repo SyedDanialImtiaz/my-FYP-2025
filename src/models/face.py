@@ -6,9 +6,10 @@ class Face:
     index: int
     bbox: tuple   # (x, y, w, h)
     image: np.ndarray
+    confidence: float
 
     @classmethod
-    def from_bbox(cls, index: int, frame: np.ndarray, bbox: tuple):
+    def from_bbox(cls, index: int, frame: np.ndarray, bbox: tuple, confidence: float):
         x, y, w, h = bbox
         face_img = frame[y:y+h, x:x+w]
-        return cls(index=index, bbox=bbox, image=face_img)
+        return cls(index=index, bbox=bbox, image=face_img, confidence=confidence)

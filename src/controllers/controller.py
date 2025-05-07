@@ -68,7 +68,8 @@ class VideoController:
                     idx = face.index
                     summary[idx] = summary.get(idx, 0) + 1
                     x, y, w, h = face.bbox
-                    self.view.log_message("[INFO]", f"  • Face {idx}: x={x}, y={y}, w={w}, h={h}")
+                    conf = face.confidence
+                    self.view.log_message("[INFO]", f"  • Face {idx}: x={x}, y={y}, w={w}, h={h}, confidence={conf:.2f}")
             # final summary
             self.view.log_message("[INFO]", "Face detection summary:")
             for idx in sorted(summary):
@@ -90,7 +91,8 @@ class VideoController:
                     idx = face.index
                     summary[idx] = summary.get(idx, 0) + 1
                     x, y, w, h = face.bbox
-                    self.view.log_message("[INFO]", f"  • Face {idx}: x={x}, y={y}, w={w}, h={h}")
+                    conf= face.confidence
+                    self.view.log_message("[INFO]", f"  • Face {idx}: x={x}, y={y}, w={w}, h={h}, confidence={conf:.2f}")
             # final summary
             self.view.log_message("[INFO]", "Face detection summary:")
             for idx in sorted(summary):
