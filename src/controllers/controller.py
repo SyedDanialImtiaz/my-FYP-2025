@@ -9,8 +9,8 @@ class VideoController:
     def __init__(self):
         self.model = Video()
         self.view = VideoView(self)
-        self.detectorCascade = FaceDetectorCascade()
-        self.detectorDNN = FaceDetectorDNN()
+        self.Cascade = FaceDetectorCascade()
+        self.DNN = FaceDetectorDNN()
         self._clear_frames_folder()
         atexit.register(self._clear_frames_folder)        
         
@@ -58,8 +58,8 @@ class VideoController:
             
     def detect_faces_dnn(self):
         try:
-            face_map = self.detectorDNN.detect_in_folder(self.FRAMES_DIR)
-            self.detectorDNN.draw_boundary(self.FRAMES_DIR)
+            face_map = self.DNN.detect_in_folder(self.FRAMES_DIR)
+            self.DNN.draw_boundary(self.FRAMES_DIR)
             # summary accumulator: face_index → total count
             summary: dict[int, int] = {}
             # log per-frame results
@@ -82,8 +82,8 @@ class VideoController:
             
     def detect_faces_cascade(self):
         try:
-            face_map = self.detectorCascade.detect_in_folder(self.FRAMES_DIR)
-            self.detectorCascade.draw_boundary(self.FRAMES_DIR)
+            face_map = self.Cascade.detect_in_folder(self.FRAMES_DIR)
+            self.Cascade.draw_boundary(self.FRAMES_DIR)
             # summary accumulator: face_index → total count
             summary: dict[int, int] = {}
             # log per-frame results
