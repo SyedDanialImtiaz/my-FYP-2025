@@ -7,7 +7,7 @@ class FaceDetectorDNN:
     """
     A faster/more accurate face detector using OpenCV's DNN (ResNet SSD) model.
     """
-    def __init__(self, proto_path: str = None, model_path: str = None, conf_threshold: float = 0.6):
+    def __init__(self, proto_path: str = None, model_path: str = None, conf_threshold: float = 0.5):
         # defaults assume you’ve placed both files alongside this script:
         base = os.path.dirname(__file__)
         self.proto_path = proto_path or os.path.join(base, "deploy.prototxt")
@@ -71,3 +71,58 @@ class FaceDetectorDNN:
             results[fname] = self.detect(frame)
 
         return results
+
+    def draw_boundary(self,
+                        folder: str = "frames",
+                        box_color: tuple[int,int,int] = (0, 255, 0),
+                        text_color: tuple[int,int,int] = (255, 0, 0),
+                        box_thickness: int = 2,
+                        font_scale: float = 0.5,
+                        text_thickness: int = 1,
+                        font: int = cv2.FONT_HERSHEY_SIMPLEX):
+        """
+        For each image in `folder`, detect faces, draw a rectangle around each,
+        and put "index:confidence" at the bottom-left of the box.
+        Overwrites the originals in-place.
+        """
+        detections = self.detect_in_folder(folder)
+
+        for fname, faces in detections.items():
+            path = os.path.join(folder, fname)
+            frame = cv2.imread(path)
+            if frame is None:
+                continue
+
+            h_frame, w_frame = frame.shape[:2]
+            for face in faces:
+                x, y, w, h = face.bbox
+
+                # 1) draw bounding box
+                cv2.rectangle(frame, (x, y), (x + w, y + h), box_color, box_thickness)
+
+                # 2) prepare label text
+                label = f"face{face.index}"
+                (text_w, text_h), baseline = cv2.getTextSize(label, font, font_scale, text_thickness)
+
+                # 3) compute text origin at bottom-left of box
+                text_x = x
+                text_y = y + h + text_h + 4
+
+                # if text would go off-image, draw it inside the box instead
+                if text_y > h_frame:
+                    text_y = y + h - 4
+
+                # 4) put the text
+                cv2.putText(
+                    frame,
+                    label,
+                    (text_x, text_y),
+                    font,
+                    font_scale,
+                    text_color,
+                    text_thickness,
+                    cv2.LINE_AA
+                )
+
+            # overwrite the original frame
+            cv2.imwrite(path, frame)

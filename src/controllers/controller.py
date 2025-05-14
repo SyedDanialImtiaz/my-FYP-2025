@@ -59,6 +59,7 @@ class VideoController:
     def detect_faces_dnn(self):
         try:
             face_map = self.detectorDNN.detect_in_folder(self.FRAMES_DIR)
+            self.detectorDNN.draw_boundary(self.FRAMES_DIR)
             # summary accumulator: face_index → total count
             summary: dict[int, int] = {}
             # log per-frame results
@@ -82,6 +83,7 @@ class VideoController:
     def detect_faces_cascade(self):
         try:
             face_map = self.detectorCascade.detect_in_folder(self.FRAMES_DIR)
+            self.detectorCascade.draw_boundary(self.FRAMES_DIR)
             # summary accumulator: face_index → total count
             summary: dict[int, int] = {}
             # log per-frame results
