@@ -1,5 +1,5 @@
 from tkinter import filedialog
-from models import Video, FaceDetectorCascade, FaceDetectorDNN
+from models import Video, FaceDetectorCascade, FaceDetectorDNN, FaceDetectorMTCNN
 from views import VideoView
 import atexit
 
@@ -11,6 +11,7 @@ class VideoController:
         self.view = VideoView(self)
         self.Cascade = FaceDetectorCascade()
         self.DNN = FaceDetectorDNN()
+        self.MTCNN = FaceDetectorMTCNN()
         self._clear_frames_folder()
         atexit.register(self._clear_frames_folder)        
         
@@ -39,6 +40,8 @@ class VideoController:
                     self.view.log_message("[INFO]", f"{key}: {value}")
             except Exception as e:
                 self.view.log_message("[ERROR_01]", str(e))
+            
+            self.video_to_frames()
         else:
             self.view.log_message("[ERROR_02]", "No video file selected.")
     
@@ -102,7 +105,34 @@ class VideoController:
                 self.view.log_message("[INFO]", f"Face {idx}: detected {count} time{'s' if count!=1 else ''}")
 
         except Exception as e:
-            self.view.log_message("[ERROR_05]", str(e))       
+            self.view.log_message("[ERROR_05]", str(e))
+            
+    def detect_faces_mtcnn(self):
+        try:
+            print("Detecting faces using MTCNN...")
+            face_map = self.MTCNN.detect_in_folder(self.FRAMES_DIR)
+            print(f"Drawing boundary...")
+            self.MTCNN.draw_boundary(self.FRAMES_DIR)
+            print("-------------------------------------------------------------------------")
+            # summary accumulator: face_index → total count
+            summary: dict[int, int] = {}
+            # log per-frame results
+            for fname, faces in face_map.items():
+                self.view.log_message("[INFO]", f"{fname}: {len(faces)} face(s) detected")
+                for face in faces:
+                    idx = face.index
+                    summary[idx] = summary.get(idx, 0) + 1
+                    x, y, w, h = face.bbox
+                    conf= face.confidence
+                    self.view.log_message("[INFO]", f"  • Face {idx}: x={x}, y={y}, w={w}, h={h}, confidence={conf:.2f}")
+            # final summary
+            self.view.log_message("[INFO]", "Face detection summary:")
+            for idx in sorted(summary):
+                count = summary[idx]
+                self.view.log_message("[INFO]", f"Face {idx}: detected {count} time{'s' if count!=1 else ''}")
+
+        except Exception as e:
+            self.view.log_message("[ERROR_05]", str(e))        
 
     def run(self):
         self.view.mainloop()

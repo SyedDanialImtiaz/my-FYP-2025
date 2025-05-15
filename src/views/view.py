@@ -27,8 +27,8 @@ class VideoView:
         self.browse_button = tk.Button(left_frame, text="Browse", width=20, command=self.controller.browse_video)
         self.browse_button.pack(pady=5)
 
-        self.frames_button = tk.Button(left_frame, text="Get Frames", width=20, command=self.controller.video_to_frames)
-        self.frames_button.pack(pady=5)
+        # self.frames_button = tk.Button(left_frame, text="Get Frames", width=20, command=self.controller.video_to_frames)
+        # self.frames_button.pack(pady=5)
         
         self.video_button = tk.Button(left_frame, text="Create Video", width=20, command=self.controller.frames_to_video)
         self.video_button.pack(pady=5)
@@ -36,12 +36,16 @@ class VideoView:
         self.clear_button = tk.Button(left_frame, text="Clear Log", width=20, command=lambda: self.clear_log())
         self.clear_button.pack(pady=5)
         
-        self.button4 = tk.Button(left_frame, text="detect faces dnn", width=20)
+        self.button4 = tk.Button(left_frame, text="detect faces DNN", width=20)
         self.button4.config(command=self.controller.detect_faces_dnn)
         self.button4.pack(pady=5)
         
         self.button5 = tk.Button(left_frame, text="detect faces HaarCascade", width=20)
         self.button5.config(command=self.controller.detect_faces_cascade)
+        self.button5.pack(pady=5)
+        
+        self.button5 = tk.Button(left_frame, text="detect faces MTCNN", width=20)
+        self.button5.config(command=self.controller.detect_faces_mtcnn)
         self.button5.pack(pady=5)
         
         self.log_area = scrolledtext.ScrolledText(right_frame, wrap="word", state="disabled")
