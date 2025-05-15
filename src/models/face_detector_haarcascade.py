@@ -89,8 +89,8 @@ class FaceDetectorCascade:
                 # skip unreadable files
                 continue
 
-            faces = self.detect(frame)
-            results[fname] = faces
+            results[fname] = self.detect(frame)
+            print(f"Detected {len(results[fname])} face(s) in {fname}")     # this line is for debugging
 
         return results  
 

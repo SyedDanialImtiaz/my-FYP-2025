@@ -69,6 +69,7 @@ class FaceDetectorDNN:
                 continue
 
             results[fname] = self.detect(frame)
+            print(f"Detected {len(results[fname])} face(s) in {fname}")     # this line is for debugging
 
         return results
 
