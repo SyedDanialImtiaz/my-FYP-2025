@@ -1,24 +1,18 @@
-# src/models/face_detector_mtcnn.py
-
 import os
 import torch
 import cv2
+import numpy as np
 from PIL import Image
 from facenet_pytorch import MTCNN
-from .face import Face
-import numpy as np
+from tqdm import tqdm
+from models import Face
 
 class FaceDetectorMTCNN:
     """
-    Uses facenet-pytorch's MTCNN for face detection.
-    API matches your other detectors:
-      - detect(frame: np.ndarray) -> list[Face]
-      - detect_in_folder(folder: str) -> dict[str, list[Face]]
+   Uses facenet-pytorch's MTCNN for face detection.
     """
-
     def __init__(self,
-                 device: str | torch.device = None,
-                 thresholds: tuple[float, float, float] = (0.7, 0.8, 0.8)):
+                 device: str | torch.device = None):
         # choose GPU if available
         self.device = device or (torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu'))
         # keep_all=True so we get all faces per frame
@@ -26,14 +20,11 @@ class FaceDetectorMTCNN:
             keep_all=True,
             min_face_size= 20,
             device=self.device,
-            thresholds=thresholds,
+            thresholds=(0.7, 0.8, 0.85),
         )
+        self.results: dict[str, list[Face]] = {}
 
     def detect(self, frame: np.ndarray) -> list[Face]:
-        """
-        Run MTCNN on a single BGR frame (H×W×3 numpy array).
-        Returns a list of Face(index, bbox, image, confidence).
-        """
         # convert BGR->RGB, to PIL
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(rgb)
@@ -59,7 +50,7 @@ class FaceDetectorMTCNN:
 
         return faces
 
-    def detect_in_folder(self, folder: str = "frames") -> dict[str, list[Face]]:
+    def detect_in_folder(self, folder: str = "frames", progress_fn: callable = None) -> dict[str, list[Face]]:
         """Walks through all .jpg/.png in `folder`, runs detect(), returns: { filename: [Face, …], … }"""
         if not os.path.isdir(folder):
             raise ValueError(f"{folder} folder not found")
@@ -67,18 +58,24 @@ class FaceDetectorMTCNN:
         if not os.listdir(folder):
             raise ValueError(f"{folder} folder is empty")       
 
+        self.results.clear()
         results: dict[str, list[Face]] = {}
-        for fname in sorted(os.listdir(folder)):
-            if not fname.lower().endswith((".jpg", ".jpeg", ".png")):
-                continue
+        
+        image_files = [f for f in sorted(os.listdir(folder)) if f.lower().endswith((".jpg", ".jpeg", ".png"))]
 
+        for fname in tqdm(image_files, desc="Detecting faces", unit="frame"):
             path = os.path.join(folder, fname)
             frame = cv2.imread(path)
             if frame is None:
                 continue
 
-            results[fname] = self.detect(frame)
-            print(f"Detected {len(results[fname])} face(s) in {fname}")     # this line is for debugging
+            detected = self.detect(frame)
+            results[fname] = detected
+            self.results[fname] = detected
+            
+            # Optional GUI log
+            if progress_fn:
+                progress_fn()   
         
         return results
 
@@ -95,7 +92,8 @@ class FaceDetectorMTCNN:
         and put "index:confidence" at the bottom-left of the box.
         Overwrites the originals in-place.
         """
-        detections = self.detect_in_folder(folder)
+        # detections = self.detect_in_folder(folder)
+        detections = self.results
 
         for fname, faces in detections.items():
             path = os.path.join(folder, fname)

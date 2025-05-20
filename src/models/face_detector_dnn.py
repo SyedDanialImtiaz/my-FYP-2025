@@ -1,6 +1,7 @@
 import os
 import cv2
 import numpy as np
+from tqdm import tqdm
 from models import Face
 
 class FaceDetectorDNN:
@@ -16,6 +17,8 @@ class FaceDetectorDNN:
 
         # load network
         self.net = cv2.dnn.readNetFromCaffe(self.proto_path, self.model_path)
+        
+        self.results: dict[str, list[Face]] = {}
 
     def detect(self, frame: np.ndarray) -> list[Face]:
         h, w = frame.shape[:2]
@@ -50,7 +53,7 @@ class FaceDetectorDNN:
 
         return faces
 
-    def detect_in_folder(self, folder: str = "frames") -> dict[str, list[Face]]:
+    def detect_in_folder(self, folder: str = "frames", progress_fn: callable = None) -> dict[str, list[Face]]:
         """Walks through all .jpg/.png in `folder`, runs detect(), returns: { filename: [Face, …], … }"""
         if not os.path.isdir(folder):
             raise ValueError(f"{folder} folder not found")
@@ -58,19 +61,25 @@ class FaceDetectorDNN:
         if not os.listdir(folder):
             raise ValueError(f"{folder} folder is empty")       
 
+        self.results.clear()
         results: dict[str, list[Face]] = {}
-        for fname in sorted(os.listdir(folder)):
-            if not fname.lower().endswith((".jpg", ".jpeg", ".png")):
-                continue
+        
+        image_files = [f for f in sorted(os.listdir(folder)) if f.lower().endswith((".jpg", ".jpeg", ".png"))]
 
+        for fname in tqdm(image_files, desc="Detecting faces", unit="frame"):
             path = os.path.join(folder, fname)
             frame = cv2.imread(path)
             if frame is None:
                 continue
 
-            results[fname] = self.detect(frame)
-            print(f"Detected {len(results[fname])} face(s) in {fname}")     # this line is for debugging
-
+            detected = self.detect(frame)
+            results[fname] = detected
+            self.results[fname] = detected
+            
+            # Optional GUI log
+            if progress_fn:
+                progress_fn()   
+        
         return results
 
     def draw_boundary(self,
@@ -86,7 +95,7 @@ class FaceDetectorDNN:
         and put "index:confidence" at the bottom-left of the box.
         Overwrites the originals in-place.
         """
-        detections = self.detect_in_folder(folder)
+        detections = self.results
 
         for fname, faces in detections.items():
             path = os.path.join(folder, fname)

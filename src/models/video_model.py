@@ -12,6 +12,9 @@ class Video:
         self.width = None
         self.height = None
 
+    def get_frame_count(self):
+        return self.frame_count
+
     def set_video_path(self, path):
         self.video_path = path
 

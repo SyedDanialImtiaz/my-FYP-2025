@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import scrolledtext
 
 class VideoView:
@@ -37,20 +38,37 @@ class VideoView:
         self.clear_button.pack(pady=5)
         
         self.button4 = tk.Button(left_frame, text="detect faces DNN", width=20)
-        self.button4.config(command=self.controller.detect_faces_dnn)
+        self.button4.config(command=lambda: self.controller.detect_faces("dnn"))
         self.button4.pack(pady=5)
         
         self.button5 = tk.Button(left_frame, text="detect faces HaarCascade", width=20)
-        self.button5.config(command=self.controller.detect_faces_cascade)
+        self.button5.config(command=lambda: self.controller.detect_faces("haarcascade"))
         self.button5.pack(pady=5)
         
         self.button5 = tk.Button(left_frame, text="detect faces MTCNN", width=20)
-        self.button5.config(command=self.controller.detect_faces_mtcnn)
+        self.button5.config(command=lambda: self.controller.detect_faces("mtcnn"))
         self.button5.pack(pady=5)
+        
+        self.progress_bar = ttk.Progressbar(right_frame, mode='determinate')
+        self.progress_bar.pack(fill="x", pady=(5, 10))
+        self.progress_bar["value"] = 0
         
         self.log_area = scrolledtext.ScrolledText(right_frame, wrap="word", state="disabled")
         self.log_area.pack(fill="both", expand=True)
         
+    def init_progress(self, total):
+        self.progress_bar["maximum"] = total
+        self.progress_bar["value"] = 0
+        self.root.update_idletasks()
+
+    def update_progress(self, step=1):
+        self.progress_bar["value"] += step
+        self.root.update_idletasks()
+
+    def reset_progress(self):
+        self.progress_bar["value"] = 0
+        self.root.update_idletasks()
+    
     def log_message(self, title, message):
         full_message = f"{title}: {message}\n"
         
