@@ -16,6 +16,7 @@ My Final Year Project titled "Anti-Deepfake Watermarking for Video Authenticatio
 - [❌] decrease face detection inaccuracy
 - [❌] make own datasets
 - [❌] find open source face swapper/deepfake program
+- [❌] if faces in frames are less than 0.5 sec, ignore the face
 
 ## How to Run Program
 
