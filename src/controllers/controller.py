@@ -50,14 +50,24 @@ class VideoController:
             
     
     def video_to_frames(self):
+        print("Converting video to frames...")
+        threading.Thread(target=self.video_to_frames_worker).start()
+    
+    
+    def video_to_frames_worker(self):
         try:
             frame_count = self.video.video_to_frames()
             self.view.log_message("[INFO]", f"{frame_count} frames succesfully extracted from video!")
         except Exception as e:
             self.view.log_message("[ERROR_03]", str(e))
-            
-            
+
+    
     def frames_to_video(self):
+        print("Creating video from frames...")
+        threading.Thread(target=self.frames_to_video_worker).start()
+            
+            
+    def frames_to_video_worker(self):
         try:
             video_path = self.video.frames_to_video()
             self.view.log_message("[INFO]", f"Video created from frames: {video_path}")
@@ -67,7 +77,6 @@ class VideoController:
                    
     def detect_faces(self, method: str):
         print("-------------------------------------------------------------------------")
-        print("Starting Thread...")
         threading.Thread(target=self._detect_faces_worker, args=(method,)).start()
         
 
@@ -88,7 +97,7 @@ class VideoController:
             self.view.init_progress(image_count)
             face_map = detector.detect_in_folder(self.FRAMES_DIR, progress_fn=self.view.update_progress)
             self.view.reset_progress()
-            print("Drawing boundary...")
+            print("Drawing face boundary...")
             detector.draw_boundary(self.FRAMES_DIR)
             print("-------------------------------------------------------------------------")
 
