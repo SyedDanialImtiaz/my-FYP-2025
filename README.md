@@ -10,13 +10,14 @@ My Final Year Project titled "Anti-Deepfake Watermarking for Video Authenticatio
 - [✅] get videos frames  
 - [✅] reattach the frames to get original video  
 - [✅] find open source face recognition algorithm  
-- [❌] research on watermarking algo  
+- [✅] research on watermarking algo  
 - [❌] fix audio missing after stitching  
 - [❌] put the watermark on faces
 - [❌] decrease face detection inaccuracy
 - [❌] make own datasets
 - [❌] find open source face swapper/deepfake program
 - [❌] if faces in frames are less than 0.5 sec, ignore the face
+- [❌] make faces index not change for each faces in video  
 
 ## How to Run Program
 

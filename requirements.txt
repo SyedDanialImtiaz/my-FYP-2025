@@ -4,3 +4,4 @@ torch
 torchvision
 facenet-pytorch==2.5.2
 tqdm
+PyWavletes
