@@ -46,7 +46,7 @@ class Video:
             "Frame Count": self.frame_count
         }
         
-    def video_to_frames(self, output_folder="frames"):
+    def video_to_frames(self, output_folder="frames", progress_fn=None):
 
         if not self.video_path:
             raise ValueError("No video file selected.")
@@ -60,21 +60,25 @@ class Video:
         if not cap.isOpened():
             raise ValueError("Cannot open video.")
 
+        # total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         frame_count = 0
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
 
-            frame_file_name = os.path.join(output_folder, f"frame_{frame_count:04d}.jpg")
+            frame_file_name = os.path.join(output_folder, f"frame_{frame_count:04d}.png")
             cv2.imwrite(frame_file_name, frame)
             frame_count += 1
+            
+            if progress_fn:
+                progress_fn(frame_count)
 
         cap.release()
         
         return frame_count
     
-    def frames_to_video(self, frames_folder="frames", output_path="video_output.mp4", codec="mp4v"):
+    def frames_to_video(self, frames_folder="frames", output_path="video_output.mp4", codec="mp4v", progress_fn=None):
         """
         Stitch frames from a folder back into a video file.
 
@@ -92,7 +96,7 @@ class Video:
         # Collect and sort frame files
         frames = sorted([
             f for f in os.listdir(frames_folder)
-            if f.lower().endswith(('.png', '.jpg', '.jpeg'))
+            if f.lower().endswith(('.png'))
         ])
         if not frames:
             raise ValueError(f"No frames found in folder: {frames_folder}")
@@ -104,12 +108,15 @@ class Video:
             raise ValueError("Cannot create video writer. Check codec and output path.")
 
         # Write frames to video
-        for fname in frames:
+        for idx, fname in enumerate(frames, start=1):
             frame_path = os.path.join(frames_folder, fname)
             img = cv2.imread(frame_path)
             if img is None:
                 raise ValueError(f"Cannot read frame: {frame_path}")
             out.write(img)
+            
+            if progress_fn:
+                progress_fn(idx)
 
         out.release()
         return output_path

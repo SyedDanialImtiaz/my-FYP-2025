@@ -27,9 +27,6 @@ class VideoView:
 
         self.browse_button = tk.Button(left_frame, text="Browse", width=20, command=self.controller.browse_video)
         self.browse_button.pack(pady=5)
-
-        # self.frames_button = tk.Button(left_frame, text="Get Frames", width=20, command=self.controller.video_to_frames)
-        # self.frames_button.pack(pady=5)
         
         self.video_button = tk.Button(left_frame, text="Create Video", width=20, command=self.controller.frames_to_video)
         self.video_button.pack(pady=5)
@@ -37,20 +34,39 @@ class VideoView:
         self.clear_button = tk.Button(left_frame, text="Clear Log", width=20, command=lambda: self.clear_log())
         self.clear_button.pack(pady=5)
         
-        self.button4 = tk.Button(left_frame, text="detect faces DNN", width=20)
-        self.button4.config(command=lambda: self.controller.detect_faces("dnn"))
-        self.button4.pack(pady=5)
+        # Detector selection dropdown
+        self.detector_var = tk.StringVar(value="dnn")
+        self.detector_dropdown = ttk.Combobox(
+            left_frame,
+            textvariable=self.detector_var,
+            values=["dnn", "haarcascade", "mtcnn"],
+            state="readonly",
+            width=18
+        )
+        self.detector_dropdown.pack(pady=5)
+
+        self.detect_button = tk.Button(left_frame, text="Detect Faces", width=20, command=lambda: self.controller.detect_faces(self.detector_var.get()))
+        self.detect_button.pack(pady=5)
         
-        self.button5 = tk.Button(left_frame, text="detect faces HaarCascade", width=20)
-        self.button5.config(command=lambda: self.controller.detect_faces("haarcascade"))
-        self.button5.pack(pady=5)
+        # Watermark selection dropdown
+        self.watermark_var = tk.StringVar(value="lsb")
+        self.watermark_dropdown = ttk.Combobox(
+            left_frame,
+            textvariable=self.watermark_var,
+            values=["lsb", "avgqim", "dwt"],
+            state="readonly",
+            width=18
+        )
+        self.watermark_dropdown.pack(pady=5)
         
-        self.button5 = tk.Button(left_frame, text="detect faces MTCNN", width=20)
-        self.button5.config(command=lambda: self.controller.detect_faces("mtcnn"))
-        self.button5.pack(pady=5)
+        self.embed_button = tk.Button(left_frame, text="Embed watermark", width=20, command=lambda: self.controller.embed_watermark(self.watermark_var.get()))
+        self.embed_button.pack(pady=5)
+        
+        self.verify_button = tk.Button(left_frame, text="Verify watermark", width=20, command=lambda: self.controller.verify_watermark(self.watermark_var.get()))
+        self.verify_button.pack(pady=5)
         
         self.progress_bar = ttk.Progressbar(right_frame, mode='determinate')
-        self.progress_bar.pack(fill="x", pady=(5, 10))
+        self.progress_bar.pack(fill="x", pady=(5, 15))
         self.progress_bar["value"] = 0
         
         self.log_area = scrolledtext.ScrolledText(right_frame, wrap="word", state="disabled")

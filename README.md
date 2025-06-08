@@ -11,13 +11,16 @@ My Final Year Project titled "Anti-Deepfake Watermarking for Video Authenticatio
 - [✅] reattach the frames to get original video  
 - [✅] find open source face recognition algorithm  
 - [✅] research on watermarking algo  
-- [❌] fix audio missing after stitching  
-- [❌] put the watermark on faces
+- [❌] fix missing audio after reattaching video  
+- [✅] put the watermark on faces
 - [❌] decrease face detection inaccuracy
-- [❌] make own datasets
 - [❌] find open source face swapper/deepfake program
 - [❌] if faces in frames are less than 0.5 sec, ignore the face
-- [❌] make faces index not change for each faces in video  
+- [❌] make faces index not change for each faces in video
+- [✅] verify the watermark on faces
+- [❌] tests watermarked videos with deepfake/faceswap programs
+- [❌] make the watermark not gray colored
+- [❌] remove face boundary boxes when finished
 
 ## How to Run Program
 
@@ -32,12 +35,13 @@ My Final Year Project titled "Anti-Deepfake Watermarking for Video Authenticatio
     ```
 
 3. **Create a virtual environment**  
+    navigate to my-FYP-2025 folders before creating the virtual environment.
 
     ```bash
     python -m venv venv
     source venv/bin/activate   
     # On Windows: 
-    venv\Scripts\activate
+    .venv\Scripts\activate
     ```
 
 4. **Install the required dependencies**  
