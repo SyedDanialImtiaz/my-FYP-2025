@@ -12,7 +12,7 @@ class VideoView:
         self.root = tk.Tk()
         self.root.title("FYP Project")
         self.root.geometry(f"{self.WIDTH}x{self.HEIGHT}")
-        
+                
         # Main horizontal layout
         main_frame = tk.Frame(self.root)
         main_frame.pack(fill="both", expand=True)
@@ -27,6 +27,10 @@ class VideoView:
 
         self.browse_button = tk.Button(left_frame, text="Browse", width=20, command=self.controller.browse_video)
         self.browse_button.pack(pady=5)
+        
+        # ─── temporary “Run All” button ─────────────────────────────
+        self.run_all_button = tk.Button(left_frame, text="Run All Pipeline", width=20, command=self._on_run_all)
+        self.run_all_button.pack(pady=5)
         
         self.video_button = tk.Button(left_frame, text="Create Video", width=20, command=self.controller.frames_to_video)
         self.video_button.pack(pady=5)
@@ -72,6 +76,21 @@ class VideoView:
         self.log_area = scrolledtext.ScrolledText(right_frame, wrap="word", state="disabled")
         self.log_area.pack(fill="both", expand=True)
         
+        # disable all the other controls for now // temporary
+        for btn in (
+            self.video_button,
+            self.detect_button,
+            self.embed_button,
+            self.verify_button,
+        ):
+            btn.config(state="normal")
+    
+    def _on_run_all(self):
+        detector =  self.detector_var.get()
+        watermark = self.watermark_var.get()
+        self.run_all_button.config(state="disabled")
+        self.controller.full_run(detector, watermark)
+    
     def init_progress(self, total):
         self.progress_bar["maximum"] = total
         self.progress_bar["value"] = 0

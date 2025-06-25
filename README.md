@@ -13,13 +13,11 @@ My Final Year Project titled "Anti-Deepfake Watermarking for Video Authenticatio
 - [✅] research on watermarking algo  
 - [❌] fix missing audio after reattaching video  
 - [✅] put the watermark on faces
-- [❌] decrease face detection inaccuracy
 - [❌] find open source face swapper/deepfake program
 - [❌] if faces in frames are less than 0.5 sec, ignore the face
-- [❌] make faces index not change for each faces in video
+- [❌] make sure the face map embedding work
 - [✅] verify the watermark on faces
 - [❌] tests watermarked videos with deepfake/faceswap programs
-- [❌] make the watermark not gray colored
 - [❌] remove face boundary boxes when finished
 
 ## How to Run Program
@@ -34,23 +32,44 @@ My Final Year Project titled "Anti-Deepfake Watermarking for Video Authenticatio
     cd my-FYP-2025
     ```
 
-3. **Create a virtual environment**  
-    navigate to my-FYP-2025 folders before creating the virtual environment.
+3. **Install FFmpeg**  
+    FFmpeg is required for video processing.  
+    - **Windows:** Download from [ffmpeg.org](https://ffmpeg.org/download.html), extract, and add the `bin` folder to your system PATH. Or install using winget.
+
+      ```bash
+      winget install ffmpeg
+      ```
+
+    - **macOS (with Homebrew):**  
+
+      ```bash
+      brew install ffmpeg
+      ```
+
+    - **Linux (Debian/Ubuntu):**  
+
+      ```bash
+      sudo apt-get install ffmpeg
+      ```
+
+4. **Create a virtual environment**  
+    Navigate to the `my-FYP-2025` folder before creating the virtual environment.
 
     ```bash
     python -m venv venv
-    source venv/bin/activate   
-    # On Windows: 
-    .venv\Scripts\activate
+    # On macOS/Linux:
+    source venv/bin/activate
+    # On Windows:
+    venv\Scripts\activate
     ```
 
-4. **Install the required dependencies**  
+5. **Install the required dependencies**  
 
     ```bash
     pip install -r requirements.txt
     ```
 
-5. **Run the program**  
+6. **Run the program**  
 
     ```bash
     python src\main.py

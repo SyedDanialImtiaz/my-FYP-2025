@@ -6,3 +6,4 @@ facenet-pytorch==2.5.2
 tqdm
 PyWavelets
 av
+python-ffmpeg

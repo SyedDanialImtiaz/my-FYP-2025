@@ -5,6 +5,7 @@ from views import VideoView
 import atexit
 import threading
 import json
+import subprocess
 import av
 import os, shutil
 
@@ -31,9 +32,74 @@ class VideoController:
         os.makedirs(self.FRAMES_DIR, exist_ok=True) 
        
 
+    # def _load_face_map_from_video(self, video_path: str):
+    #     """
+    #     Load the embedded face_map JSON from the video’s metadata.
+    #     Returns:
+    #         dict[str, List[Face]] or None if no face_map tag is present.
+    #     """
+    #     from models.face import Face
+
+    #     # 1️⃣ Find ffprobe on PATH
+    #     ffprobe = shutil.which("ffprobe") or shutil.which("ffprobe.exe")
+    #     if not ffprobe:
+    #         self.view.log_message("[ERROR_03]", "ffprobe not found on PATH.")
+    #         return None
+
+    #     try:
+    #         # 2️⃣ Grab the full format block as JSON
+    #         proc = subprocess.run(
+    #             [
+    #                 ffprobe,
+    #                 "-v", "error",
+    #                 "-print_format", "json",
+    #                 "-show_format",
+    #                 video_path
+    #             ],
+    #             capture_output=True,
+    #             text=True,
+    #             check=True
+    #         )
+    #         info = json.loads(proc.stdout)
+    #         print(proc.stdout)  # Debugging line to see the output
+    #         tags = info.get("format", {}).get("tags", {})
+
+    #         # 3️⃣ Pull out the face_map field
+    #         face_map_raw = tags.get("face_map")
+    #         if not face_map_raw:
+    #             return None
+
+    #         # 4️⃣ Parse the JSON string stored in that tag
+    #         data = json.loads(face_map_raw)
+
+    #         # 5️⃣ Reconstruct your Face objects
+    #         face_map = {}
+    #         for frame_name, boxes in data.items():
+    #             face_map[frame_name] = [
+    #                 Face.from_bbox(idx, None, tuple(box), confidence=1.0)
+    #                 for idx, box in enumerate(boxes)
+    #             ]
+    #         return face_map
+
+    #     except subprocess.CalledProcessError as e:
+    #         self.view.log_message(
+    #             "[ERROR_03]", f"ffprobe execution failed: {e}"
+    #         )
+    #     except json.JSONDecodeError as e:
+    #         self.view.log_message(
+    #             "[ERROR_03]", f"face_map JSON malformed or not valid JSON: {e}"
+    #         )
+    #     except Exception as e:
+    #         self.view.log_message(
+    #             "[ERROR_03]", f"Unexpected error loading face_map: {e}"
+    #         )
+    #     return None
+   
+    
     def browse_video(self):
         if self.video.get_video_path() is not None:
             self._clear_frames_folder()
+            self.detect_face_map.clear()
             self.video = Video()
 
         path = filedialog.askopenfilename(
@@ -45,13 +111,12 @@ class VideoController:
             self.video.set_video_path(path)
             self.view.log_message("[INFO]", f"Video selected: {path}")
             
-            # loaded = self._load_face_map_from_video(path)
-            # if loaded:
-            #     self.detect_face_map = loaded.copy()
-            #     self.view.log_message("[INFO]", "Face map loaded from video metadata.")
-            # else:
-            #     self.detect_face_map = {}
-            #     self.view.log_message("[INFO]", "No face map found in video metadata.")
+            loaded = self.video.load_face_map(path)
+            if loaded:
+                self.detect_face_map = loaded
+                self.view.log_message("[INFO]", "Face map loaded from video metadata.")
+            else:
+                self.view.log_message("[INFO]", "No face map found in video metadata.")
             
             try:
                 info = self.video.get_video_info()
@@ -88,79 +153,68 @@ class VideoController:
             
     def _frames_to_video_worker(self):
         try:
-            # 1) Use existing code to stitch PNG frames into an MP4 or MKV (via your Video.frames_to_video)
             total = self.video.get_frame_count()
             self.view.init_progress(total)
-            temp_path = self.video.frames_to_video(progress_fn=self.view.update_progress)
+            video_path = self.video.frames_to_video(progress_fn=self.view.update_progress)
             self.view.reset_progress()
-            self.view.log_message("[INFO]", f"Temporary video created: {temp_path}")
-
-            # 2) Remux with PyAV to inject metadata (face_map) into a *new* file of the same format
+            self.view.log_message("[INFO]", f"Video created: {video_path}")
+            
             try:
-                ext = os.path.splitext(temp_path)[1].lower()  # e.g. ".mp4" or ".mkv"
-                # a) Build a Python dict of your bounding-box lists
-                serializable = {
-                    fname: [
-                        [int(f.bbox[0]), int(f.bbox[1]), int(f.bbox[2]), int(f.bbox[3])]
-                        for f in faces
-                    ]
-                    for fname, faces in self.detect_face_map.items()
-                }
-                face_map_json = json.dumps(serializable)
-
-                # b) Open the just‐created temp video for reading
-                inp = av.open(temp_path)
-
-                # c) Choose a new filename for the remuxed output (same extension)
-                base, _ = os.path.splitext(temp_path)
-                tmp_path = f"{base}_meta{ext}"
-
-                # d) Open an output container with the same format
-                if ext == ".mp4":
-                    out = av.open(tmp_path, mode="w", format="mp4")
-                    # MP4 only supports standard tags: we’ll store JSON in “comment”
-                    metadata_key = "comment"
-                    metadata_value = face_map_json
-                else:
-                    # For MKV (or other Matroska‐compatible), use a custom “face_map” tag
-                    out = av.open(tmp_path, mode="w", format="matroska")
-                    metadata_key = "face_map"
-                    metadata_value = face_map_json
-
-                # e) Assign metadata (keys must be str, values must be str for these containers)
-                if metadata_value:
-                    out.metadata[metadata_key] = metadata_value
-
-                # f) Copy each input stream into the output (copy‐scheme)
-                for inp_stream in inp.streams:
-                    print("111")
-                    out.add_stream(None, template=inp_stream)
-                    print("222")
-
-                # g) Demux packets from inp and mux them into out
-                for packet in inp.demux():
-                    # Skip empty/dummy packets
-                    if packet.dts is None:
-                        continue
-                    in_index = packet.stream.index
-                    packet.stream = out.streams[in_index]
-                    out.mux(packet)
-
-                # h) Close both containers to write headers/trailers
-                out.close()
-                inp.close()
-
-                # i) Remove the original temp video and rename the “_meta” one to the original name
-                os.remove(temp_path)
-                os.replace(tmp_path, temp_path)
-
-                self.view.log_message("[INFO]", f"Embedded face_map metadata into: {temp_path}")
+                self.video.embed_face_map(video_path, self.detect_face_map)
             except Exception as e:
-                self.view.log_message("[ERROR_041]", f"Failed to embed face_map metadata: {e}")
+                self.view.log_message("[ERROR_041]", f"FFmpeg embed failed: {e}")
 
         except Exception as e:
             self.view.log_message("[ERROR_04]", str(e))
             
+
+    # def _embed_face_map(self, video_path: str, face_map: dict) -> None:
+    #     """
+    #     Embed the given face_map dict into the MP4 at `video_path` as
+    #     a format-level metadata tag, using ffmpeg –codec copy.
+    #     """
+    #     # 1️⃣ Build a pure-Python serializable dict
+    #     serializable = {
+    #         fname: [
+    #             [int(f.bbox[0]), int(f.bbox[1]), int(f.bbox[2]), int(f.bbox[3])]
+    #             for f in faces
+    #         ]
+    #         for fname, faces in face_map.items()
+    #     }
+    #     face_map_json = json.dumps(serializable, separators=(",", ":"))
+
+    #     # 2️⃣ Locate ffmpeg
+    #     ffmpeg_cmd = shutil.which("ffmpeg") or shutil.which("ffmpeg.exe")
+    #     if not ffmpeg_cmd:
+    #         raise RuntimeError("ffmpeg not found on PATH – please install or adjust PATH")
+
+    #     # 3️⃣ Run ffmpeg to copy streams and write metadata
+    #     tmp_path = video_path.replace(".mp4", "_meta.mp4")
+    #     subprocess.run([
+    #         ffmpeg_cmd, "-y",
+    #         "-i", video_path,
+    #         "-metadata", f"face_map={face_map_json}",
+    #         "-codec", "copy",
+    #         tmp_path
+    #     ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    #     # 4️⃣ Replace original with the metadata-stamped file
+    #     os.replace(tmp_path, video_path)
+    #     self.view.log_message("[INFO]", "face_map embedded via FFmpeg.")
+
+     
+    def full_run(self, detector_method: str, watermark_method: str):
+        #store the user's choice
+        self._full_detector = detector_method
+        self._full_watermark = watermark_method
+        threading.Thread(target=self._full_run_worker).start()
+
+    def _full_run_worker(self):
+        self._detect_faces_worker(self._full_detector)
+        self._embed_watermark_worker(self._full_watermark)
+        self._verify_watermark_worker(self._full_watermark)
+        self._frames_to_video_worker()   
+     
                    
     def detect_faces(self, method: str):
         print("-------------------------------------------------------------------------")
@@ -263,31 +317,32 @@ class VideoController:
                 return
 
             if not self.detect_face_map:
+                print("No face map found; attempting to load from video metadata...")
                 try:
-                    container = av.open(self.video.get_video_path())
-                    raw_json = container.metadata.get("face_map") \
-                               or container.metadata.get("comment", "")
-                    container.close()
-                    if raw_json:
-                        data = json.loads(raw_json)
-                        from models.face import Face
-                        loaded_map: dict[str, list[Face]] = {}
-                        for fname, boxes in data.items():
-                            faces_list: list[Face] = []
-                            for i, bbox_list in enumerate(boxes):
-                                x, y, w, h = bbox_list
-                                faces_list.append(
-                                    Face.from_bbox(i, None, (x, y, w, h), confidence=1.0)
-                                )
-                            loaded_map[fname] = faces_list
-                        self.detect_face_map = loaded_map.copy()
-                        self.view.log_message("[INFO]", "Face map loaded from video metadata.")
-                    else:
-                        self.view.log_message("[ERROR_13]", "No face map found in metadata; cannot verify.")
+                    res = subprocess.run([
+                        "ffprobe", "-v", "error",
+                        "-show_entries", "format_tags=face_map",
+                        "-of", "default=noprint_wrappers=1:nokey=1",
+                        self.video.get_video_path()
+                    ], capture_output=True, text=True, check=True)
+                    raw = res.stdout.strip()
+                    if not raw:
+                        self.view.log_message("[ERROR_13]", "No face_map metadata found; cannot verify.")
                         return
-                except Exception:
-                    self.view.log_message("[ERROR_13]", "Failed to read metadata; cannot verify.")
+                    data = json.loads(raw)
+                    from models.face import Face
+                    lm = {}
+                    for fname, boxes in data.items():
+                        lm[fname] = [
+                            Face.from_bbox(i, None, tuple(box), confidence=1.0)
+                            for i, box in enumerate(boxes)
+                        ]
+                    self.detect_face_map = lm
+                    self.view.log_message("[INFO]", "face_map loaded via ffprobe.")
+                except Exception as ex:
+                    self.view.log_message("[ERROR_13]", f"FFprobe load failed: {ex}")
                     return
+                
             print(f"Verifying {method.upper()} watermark...")
             total = self.video.get_frame_count()
             self.view.init_progress(total)
